@@ -8,7 +8,7 @@ app = Flask(__name__)
 # 設定（あなたの環境に合わせて変更してください）
 # ==========================================
 # Render.comで発行されたあなたのURL（末尾のスラッシュなし）
-MY_URL = "https://your-app-name.onrender.com"
+MY_URL = "https://capture-the-f-l-a-g.onrender.com"
 
 # Admin Botから見た脆弱なアプリのURL
 TARGET_URL = "http://web:3000"
