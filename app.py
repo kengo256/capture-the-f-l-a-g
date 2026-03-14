@@ -35,6 +35,7 @@ def start():
 def next_char():
     global KNOWN_FLAG
     if KNOWN_FLAG.endswith("}"):
+        print(f"Attack Finished! Flag: {KNOWN_FLAG}")
         return f"<h1>Attack Finished!</h1><p>Flag: {KNOWN_FLAG}</p>"
 
     current_pos = len(KNOWN_FLAG)
