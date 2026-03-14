@@ -8,7 +8,7 @@ app = Flask(__name__)
 # ==========================================
 MY_URL = "https://ctflag.onrender.com"
 TARGET_URL = "http://web:3000"
-CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789_}"
+CHARSET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_}"
 KNOWN_FLAG = "tkbctf{"
 # ==========================================
 
